@@ -5,6 +5,8 @@ import os
 
 app = Flask(__name__)
 CORS(app)
+
+# 🔐 Load Gemini API key from environment
 API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=API_KEY)
 
@@ -13,6 +15,7 @@ def ask():
     try:
         data = request.json
 
+        # 🧠 Format prompt using structured farmer inputs
         prompt = f"""
 You are an agricultural advisor AI. Based on the following farm inputs, suggest the top 3 suitable crop types for the upcoming season in Tamil Nadu, India:
 
@@ -39,8 +42,8 @@ Please recommend 3 crops suitable for small to medium farms. Include brief reaso
 
         def generate():
             try:
-                model = genai.GenerativeModel("gemini-pro")
-                stream = model.generate_content([prompt], stream=True)
+                model = genai.GenerativeModel(model_name="models/gemini-pro")
+                stream = model.generate_content(prompt, stream=True)
                 for chunk in stream:
                     if chunk.text:
                         yield chunk.text
@@ -56,6 +59,3 @@ Please recommend 3 crops suitable for small to medium farms. Include brief reaso
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
-
-
-
