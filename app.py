@@ -5,8 +5,7 @@ import os
 
 app = Flask(__name__)
 CORS(app)
-
-API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyCqS9615Ggp1g7CvXmbEO-T4L9wUs4e9hE")
+API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=API_KEY)
 
 @app.route("/ask", methods=["POST"])
