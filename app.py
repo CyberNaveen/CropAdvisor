@@ -3,24 +3,18 @@ from flask_cors import CORS
 import google.generativeai as genai
 import os
 
-# 🔐 Optional: Load API key from environment
-# from dotenv import load_dotenv
-# load_dotenv()
-# genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-
-# 🔥 Direct API key setup
-API_KEY = "AIzaSyCqS9615Ggp1g7CvXmbEO-T4L9wUs4e9hE"
-genai.configure(api_key=API_KEY)
-
 app = Flask(__name__)
 CORS(app)
 
+API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyCqS9615Ggp1g7CvXmbEO-T4L9wUs4e9hE")
+genai.configure(api_key=API_KEY)
+
 @app.route("/ask", methods=["POST"])
 def ask():
-    data = request.json
+    try:
+        data = request.json
 
-    # 🧠 Format prompt using structured farmer inputs
-    prompt = f"""
+        prompt = f"""
 You are an agricultural advisor AI. Based on the following farm inputs, suggest the top 3 suitable crop types for the upcoming season in Tamil Nadu, India:
 
 🌱 Soil & Land Characteristics:
@@ -42,16 +36,27 @@ You are an agricultural advisor AI. Based on the following farm inputs, suggest 
 Please recommend 3 crops suitable for small to medium farms. Include brief reasoning for each.
 """
 
-    def generate():
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        stream = model.generate_content([prompt], stream=True)
-        for chunk in stream:
-            if chunk.text:
-                yield chunk.text
+        print("🧠 Prompt sent to Gemini:\n", prompt)
 
-    return Response(generate(), mimetype="text/plain")
+        def generate():
+            try:
+                model = genai.GenerativeModel("gemini-1.5-flash")
+                stream = model.generate_content([prompt], stream=True)
+                for chunk in stream:
+                    if chunk.text:
+                        yield chunk.text
+            except Exception as gen_error:
+                print("❌ Gemini error:", gen_error)
+                yield f"Error generating response: {str(gen_error)}"
+
+        return Response(generate(), mimetype="text/plain")
+
+    except Exception as e:
+        print("❌ Flask error:", e)
+        return f"Internal Server Error: {str(e)}", 500
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
+
 
 
