@@ -52,5 +52,6 @@ Please recommend 3 crops suitable for small to medium farms. Include brief reaso
     return Response(generate(), mimetype="text/plain")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5000)
+
 
