@@ -1,4 +1,4 @@
-streamlit
+Flask==3.0.0
+flask-cors==4.0.0
 google-generativeai==0.5.0
-googletrans==4.0.0rc1
-firebase-admin
+gunicorn==21.2.0
