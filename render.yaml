@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: cropadvisor
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: GEMINI_API_KEY
+        value: AIzaSyCqS9615Ggp1g7CvXmbEO-T4L9wUs4e9hE
+
