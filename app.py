@@ -3,6 +3,7 @@ from flask_cors import CORS
 import google.generativeai as genai
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 app = Flask(__name__)
 CORS(app)
@@ -47,24 +48,23 @@ Please recommend 3 crops suitable for small to medium farms. Include brief reaso
 
         print("🧠 Prompt sent to Gemini:\n", prompt)
 
+        def generate_response():
+            model = genai.GenerativeModel(model_name="gemini-2.5-pro")
+            response = model.generate_content(prompt)
+            return response.text
+
         def generate():
-            try:
-                model = genai.GenerativeModel(model_name="gemini-2.5-pro")
-                start = time.time()
-                stream = model.generate_content(prompt, stream=True)
-                for chunk in stream:
-                    if chunk.text:
-                        yield chunk.text
-                print("⏱ Gemini response time:", time.time() - start)
-            except Exception as gen_error:
-                print("❌ Gemini streaming error:", gen_error)
-                yield "⚠️ AI request failed: switching to fallback mode.\n"
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(generate_response)
                 try:
-                    response = model.generate_content(prompt)
-                    yield response.text
-                except Exception as fallback_error:
-                    print("❌ Gemini fallback error:", fallback_error)
-                    yield f"Error generating response: {str(fallback_error)}"
+                    result = future.result(timeout=60)
+                    yield result
+                except TimeoutError:
+                    print("⏱ Gemini response timed out")
+                    yield "⚠️ AI request failed: timeout after 60 seconds."
+                except Exception as gen_error:
+                    print("❌ Gemini error:", gen_error)
+                    yield f"Error generating response: {str(gen_error)}"
 
         return Response(generate(), mimetype="text/plain")
 
