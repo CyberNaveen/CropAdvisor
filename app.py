@@ -53,7 +53,7 @@ Please recommend 3 crops suitable for small to medium farms. Include brief reaso
             try:
                 model = genai.GenerativeModel(model_name="gemini-2.5-pro")
                 start = time.time()
-                stream = model.generate_content(prompt, stream=True)
+                stream = model.generate_content(prompt, stream=True, generation_config={"timeout": 60})
                 for chunk in stream:
                     if chunk.text:
                         yield chunk.text
@@ -62,7 +62,7 @@ Please recommend 3 crops suitable for small to medium farms. Include brief reaso
                 print("❌ Gemini streaming error:", gen_error)
                 yield "⚠️ AI request failed: switching to fallback mode.\n"
                 try:
-                    response = model.generate_content(prompt)
+                    response = model.generate_content(prompt, generation_config={"timeout": 60})
                     yield response.text
                 except Exception as fallback_error:
                     print("❌ Gemini fallback error:", fallback_error)
