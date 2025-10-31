@@ -6,4 +6,4 @@ services:
     startCommand: gunicorn app:app
     envVars:
       - key: GEMINI_API_KEY
-        value: AIzaSyCqS9615Ggp1g7CvXmbEO-T4L9wUs4e9hE
+        value: AIzaSyAFfSAOLxPM-SyV4b5jVRgODaMNDQtypVY
