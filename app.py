@@ -47,8 +47,8 @@ Please recommend 3 crops suitable for small to medium farms. Include brief reaso
         print("🧠 Prompt sent to Gemini:\n", prompt)
 
         def generate():
-            try:
-                model = genai.GenerativeModel(model_name="models/gemini-pro")
+            try: 
+                model = genai.GenerativeModel(model_name="gemini-pro")
                 stream = model.generate_content(prompt, stream=True)
                 for chunk in stream:
                     if chunk.text:
