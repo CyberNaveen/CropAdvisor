@@ -6,16 +6,22 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# 🔐 Load Gemini API key from environment
 API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=API_KEY)
+
+@app.route("/", methods=["GET"])
+def home():
+    return "✅ CropAdvisor backend is running"
+
+@app.route("/ask", methods=["GET"])
+def ask_info():
+    return "✅ Use POST to submit farm data for crop recommendations"
 
 @app.route("/ask", methods=["POST"])
 def ask():
     try:
         data = request.json
 
-        # 🧠 Format prompt using structured farmer inputs
         prompt = f"""
 You are an agricultural advisor AI. Based on the following farm inputs, suggest the top 3 suitable crop types for the upcoming season in Tamil Nadu, India:
 
