@@ -7,7 +7,6 @@ import time
 app = Flask(__name__)
 CORS(app)
 
-# 🔐 Load Gemini API key from environment
 API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=API_KEY)
 
@@ -24,7 +23,6 @@ def ask():
     try:
         data = request.json
 
-        # 🧠 Format prompt using structured farmer inputs
         prompt = f"""
 You are an agricultural advisor AI. Based on the following farm inputs, suggest the top 3 suitable crop types for the upcoming season in Tamil Nadu, India:
 
@@ -53,7 +51,7 @@ Please recommend 3 crops suitable for small to medium farms. Include brief reaso
             try:
                 model = genai.GenerativeModel(model_name="gemini-2.5-pro")
                 start = time.time()
-                stream = model.generate_content(prompt, stream=True, generation_config={"timeout": 60})
+                stream = model.generate_content(prompt, stream=True)
                 for chunk in stream:
                     if chunk.text:
                         yield chunk.text
@@ -62,7 +60,7 @@ Please recommend 3 crops suitable for small to medium farms. Include brief reaso
                 print("❌ Gemini streaming error:", gen_error)
                 yield "⚠️ AI request failed: switching to fallback mode.\n"
                 try:
-                    response = model.generate_content(prompt, generation_config={"timeout": 60})
+                    response = model.generate_content(prompt)
                     yield response.text
                 except Exception as fallback_error:
                     print("❌ Gemini fallback error:", fallback_error)
