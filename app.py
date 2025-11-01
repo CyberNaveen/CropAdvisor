@@ -1,7 +1,8 @@
-from flask import Flask, request, Response, jsonify
+from flask import Flask, request, Response
 from flask_cors import CORS
 import google.generativeai as genai
 import os
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -60,13 +61,52 @@ Return the result in JSON format like this:
 
         response = model.generate_content(prompt)
 
-        # ✅ Always return only the text field
         if hasattr(response, "text") and response.text:
             try:
-                # Try to parse JSON if Gemini followed the format
-                return jsonify(eval(response.text))
-            except Exception:
-                # Fallback: return plain text
+                crops = json.loads(response.text)["crops"]
+
+                # Build styled HTML
+                html = """
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        h2 { color: #2E7D32; }
+                        .card {
+                            border: 1px solid #ccc;
+                            border-radius: 8px;
+                            padding: 15px;
+                            margin: 10px 0;
+                            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+                        }
+                        .card h3 {
+                            margin: 0 0 8px 0;
+                            color: #1565C0;
+                        }
+                        .card p {
+                            margin: 0;
+                            color: #333;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h2>🌾 Recommended Crops</h2>
+                """
+
+                for crop in crops:
+                    html += f"""
+                    <div class="card">
+                        <h3>{crop['name']}</h3>
+                        <p>{crop['reason']}</p>
+                    </div>
+                    """
+
+                html += "</body></html>"
+
+                return Response(html, mimetype="text/html")
+
+            except Exception as parse_err:
+                print("⚠️ JSON parse error:", parse_err)
                 return Response(response.text, mimetype="text/plain")
         else:
             return Response("⚠️ No text field in Gemini response", mimetype="text/plain")
