@@ -57,8 +57,7 @@ Return the result in JSON format like this:
 
         print("🧠 Prompt sent to Gemini:\n", prompt)
 
-        # ⚡ Default to fast model, allow override via query param
-        model_name = request.args.get("model", "models/gemini-2.5-flash")
+        model = genai.GenerativeModel("gemini-1.5-flash")
         model = genai.GenerativeModel(model_name)
         response = model.generate_content(prompt)
 
