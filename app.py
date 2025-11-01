@@ -1,4 +1,4 @@
-from flask import Flask, request, Response
+from flask import Flask, request, Response, jsonify
 from flask_cors import CORS
 import google.generativeai as genai
 import os
@@ -43,7 +43,16 @@ You are an agricultural advisor AI. Based on the following farm inputs, suggest 
 - Preferred Crop Type: {data.get("preferred_crop", "Unknown")}
 - Scheme Eligibility: {data.get("scheme", "Unknown")}
 
-Please recommend 3 crops suitable for small to medium farms. Include brief reasoning for each.
+Please recommend 3 crops suitable for small to medium farms. 
+Return the result in **JSON format** like this:
+
+{{
+  "crops": [
+    {{"name": "Crop1", "reason": "Reasoning..."}},
+    {{"name": "Crop2", "reason": "Reasoning..."}},
+    {{"name": "Crop3", "reason": "Reasoning..."}}
+  ]
+}}
 """
 
         print("🧠 Prompt sent to Gemini:\n", prompt)
@@ -54,9 +63,13 @@ Please recommend 3 crops suitable for small to medium farms. Include brief reaso
 
         # ✅ Always return only the text field
         if hasattr(response, "text") and response.text:
-            return Response(response.text, mimetype="text/plain")
+            try:
+                # Try to parse JSON if Gemini followed the format
+                return jsonify(eval(response.text))
+            except Exception:
+                # Fallback: return plain text
+                return Response(response.text, mimetype="text/plain")
         else:
-            # Fallback: return raw response for debugging
             return Response("⚠️ No text field in Gemini response", mimetype="text/plain")
 
     except Exception as e:
