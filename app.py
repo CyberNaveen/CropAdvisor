@@ -21,8 +21,9 @@ def ask_info():
 @app.route("/ask", methods=["POST"])
 def ask():
     try:
-        data = request.json
+        data = request.json or {}
 
+        # 🧠 Build the structured prompt
         prompt = f"""
 You are an agricultural advisor AI. Based on the following farm inputs, suggest the top 3 suitable crop types for the upcoming season in Tamil Nadu, India:
 
@@ -47,11 +48,16 @@ Please recommend 3 crops suitable for small to medium farms. Include brief reaso
 
         print("🧠 Prompt sent to Gemini:\n", prompt)
 
-        # Use the same model style as your terminal
+        # ⚡ Use the same model style as your terminal
         model = genai.GenerativeModel("models/gemini-2.5-pro")
         response = model.generate_content(prompt)
 
-        return Response(response.text, mimetype="text/plain")
+        # ✅ Always return only the text field
+        if hasattr(response, "text") and response.text:
+            return Response(response.text, mimetype="text/plain")
+        else:
+            # Fallback: return raw response for debugging
+            return Response("⚠️ No text field in Gemini response", mimetype="text/plain")
 
     except Exception as e:
         print("❌ Flask error:", e)
