@@ -56,9 +56,8 @@ Return the result in JSON format like this:
 """
 
         print("🧠 Prompt sent to Gemini:\n", prompt)
-model = genai.GenerativeModel("models/gemini-flash-lite-latest")
+        model = genai.GenerativeModel("models/gemini-flash-lite-latest")
 
-        model = genai.GenerativeModel(model_name)
         response = model.generate_content(prompt)
 
         # ✅ Always return only the text field
