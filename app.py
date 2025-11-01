@@ -2,7 +2,6 @@ from flask import Flask, request, Response
 from flask_cors import CORS
 import google.generativeai as genai
 import os
-import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 app = Flask(__name__)
@@ -24,6 +23,7 @@ def ask():
     try:
         data = request.json
 
+        # 🧠 Build the structured prompt
         prompt = f"""
 You are an agricultural advisor AI. Based on the following farm inputs, suggest the top 3 suitable crop types for the upcoming season in Tamil Nadu, India:
 
@@ -49,7 +49,7 @@ Please recommend 3 crops suitable for small to medium farms. Include brief reaso
         print("🧠 Prompt sent to Gemini:\n", prompt)
 
         def generate_response():
-            model = genai.GenerativeModel(model_name="gemini-2.5-pro")
+            model = genai.GenerativeModel(model_name="gemini-1.5-flash")
             response = model.generate_content(prompt)
             return response.text
 
