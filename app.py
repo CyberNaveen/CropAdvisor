@@ -44,7 +44,7 @@ You are an agricultural advisor AI. Based on the following farm inputs, suggest 
 - Scheme Eligibility: {data.get("scheme", "Unknown")}
 
 Please recommend 3 crops suitable for small to medium farms. 
-Return the result in **JSON format** like this:
+Return the result in JSON format like this:
 
 {{
   "crops": [
@@ -57,8 +57,9 @@ Return the result in **JSON format** like this:
 
         print("🧠 Prompt sent to Gemini:\n", prompt)
 
-        # ⚡ Use the same model style as your terminal
-        model = genai.GenerativeModel("models/gemini-1.5-pro")
+        # ⚡ Default to fast model, allow override via query param
+        model_name = request.args.get("model", "models/gemini-2.5-flash")
+        model = genai.GenerativeModel(model_name)
         response = model.generate_content(prompt)
 
         # ✅ Always return only the text field
