@@ -1,6 +1,6 @@
 from flask import Flask, request, Response
 from flask_cors import CORS
-import google.generativeai as genai
+import google.genai as genai
 import os
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
