@@ -1,14 +1,13 @@
 from flask import Flask, request, Response
 from flask_cors import CORS
-import google.genai as genai
+from google import genai
 import os
-from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 app = Flask(__name__)
 CORS(app)
 
 API_KEY = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=API_KEY)
+client = genai.Client(api_key=API_KEY)
 
 @app.route("/", methods=["GET"])
 def home():
@@ -23,7 +22,6 @@ def ask():
     try:
         data = request.json
 
-        # 🧠 Build the structured prompt
         prompt = f"""
 You are an agricultural advisor AI. Based on the following farm inputs, suggest the top 3 suitable crop types for the upcoming season in Tamil Nadu, India:
 
@@ -48,25 +46,12 @@ Please recommend 3 crops suitable for small to medium farms. Include brief reaso
 
         print("🧠 Prompt sent to Gemini:\n", prompt)
 
-        def generate_response():
-            model = genai.GenerativeModel("gemini-1.5-flash")
-            response = model.generate_content(prompt)
-            return response.text
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",   # or "gemini-2.5-pro"
+            contents=prompt
+        )
 
-        def generate():
-            with ThreadPoolExecutor(max_workers=1) as executor:
-                future = executor.submit(generate_response)
-                try:
-                    result = future.result(timeout=60)
-                    yield result
-                except TimeoutError:
-                    print("⏱ Gemini response timed out")
-                    yield "⚠️ AI request failed: timeout after 60 seconds."
-                except Exception as gen_error:
-                    print("❌ Gemini error:", gen_error)
-                    yield f"Error generating response: {str(gen_error)}"
-
-        return Response(generate(), mimetype="text/plain")
+        return Response(response.text, mimetype="text/plain")
 
     except Exception as e:
         print("❌ Flask error:", e)
