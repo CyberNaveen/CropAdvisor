@@ -58,8 +58,7 @@ Return the result in **JSON format** like this:
         print("🧠 Prompt sent to Gemini:\n", prompt)
 
         # ⚡ Use the same model style as your terminal
-        model = genai.GenerativeModel("models/gemini-pro")
-
+        model = genai.GenerativeModel("models/gemini-1.5-pro")
         response = model.generate_content(prompt)
 
         # ✅ Always return only the text field
