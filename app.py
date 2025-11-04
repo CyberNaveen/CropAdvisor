@@ -23,8 +23,10 @@ db.init_app(app)
 API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=API_KEY)
 
-@app.before_first_request
-def create_tables():
+# -------------------
+# Initialize DB at startup (Flask 3.1+ safe)
+# -------------------
+with app.app_context():
     db.create_all()
 
 # -------------------
@@ -136,7 +138,7 @@ Return the result in JSON format like this:
                 html += "</body></html>"
 
                 return Response(html, mimetype="text/html")
-            except Exception as parse_err:
+            except Exception:
                 return Response(response.text, mimetype="text/plain")
         else:
             return Response("⚠️ No text field in Gemini response", mimetype="text/plain")
