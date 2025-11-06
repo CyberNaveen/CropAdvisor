@@ -24,7 +24,7 @@ API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=API_KEY)
 
 # -------------------
-# Initialize DB at startup (Flask 3.1+ safe)
+# Initialize DB at startup
 # -------------------
 with app.app_context():
     db.create_all()
@@ -65,7 +65,7 @@ def register():
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({"message": "Registration successful"})
+    return jsonify({"message": "Registration successful"}), 201
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -84,6 +84,52 @@ def login():
     return jsonify({"token": token, "user": {"id": user.id, "name": user.name, "username": user.username}})
 
 # -------------------
+# SQL CRUD Endpoints
+# -------------------
+
+@app.route("/users", methods=["GET"])
+def list_users():
+    users = UserRecord.query.all()
+    return jsonify([
+        {"id": u.id, "name": u.name, "username": u.username, "email": u.email, "mobileNumber": u.mobileNumber}
+        for u in users
+    ])
+
+@app.route("/users/<int:user_id>", methods=["GET"])
+def get_user(user_id):
+    user = UserRecord.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    return jsonify({"id": user.id, "name": user.name, "username": user.username,
+                    "email": user.email, "mobileNumber": user.mobileNumber})
+
+@app.route("/users/<int:user_id>", methods=["PUT"])
+def update_user(user_id):
+    data = request.get_json() or {}
+    user = UserRecord.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    # Update allowed fields
+    for field in ["name", "username", "email", "mobileNumber"]:
+        if data.get(field):
+            setattr(user, field, data[field])
+    if data.get("password"):
+        user.password = hash_password(data["password"])
+
+    db.session.commit()
+    return jsonify({"message": "User updated successfully"})
+
+@app.route("/users/<int:user_id>", methods=["DELETE"])
+def delete_user(user_id):
+    user = UserRecord.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({"message": "User deleted successfully"})
+
+# -------------------
 # AI Crop Advisor
 # -------------------
 @app.route("/ask", methods=["GET"])
@@ -94,36 +140,19 @@ def ask_info():
 def ask():
     try:
         data = request.json or {}
-
         prompt = f"""
 You are an agricultural advisor AI. Based on the following farm inputs, suggest the top 3 suitable crop types for the upcoming season in Tamil Nadu, India:
 
-🌱 Soil & Land Characteristics:
-- Soil Type: {data.get("soil_type", "Unknown")}
-- Drainage Capacity: {data.get("drainage", "Unknown")}
-- Area Available: {data.get("area", "Unknown")} acres
-- Previous Crop History: {data.get("crop_history", "Unknown")}
-
-📍 Location & Weather:
-- Location: {data.get("location", "Unknown")}
-- Weather: {data.get("weather", "Unknown")}
-
-🌾 Crop & Resource Preferences:
-- Irrigation: {data.get("irrigation", "Unknown")}
-- Budget: {data.get("budget", "Unknown")}
-- Preferred Crop Type: {data.get("preferred_crop", "Unknown")}
-- Scheme Eligibility: {data.get("scheme", "Unknown")}
-
-Please recommend 3 crops suitable for small to medium farms. 
-Return the result in JSON format like this:
-
-{{
-  "crops": [
-    {{"name": "Crop1", "reason": "Reasoning..."}},
-    {{"name": "Crop2", "reason": "Reasoning..."}},
-    {{"name": "Crop3", "reason": "Reasoning..."}}
-  ]
-}}
+Soil Type: {data.get("soil_type", "Unknown")}
+Drainage Capacity: {data.get("drainage", "Unknown")}
+Area Available: {data.get("area", "Unknown")} acres
+Previous Crop History: {data.get("crop_history", "Unknown")}
+Location: {data.get("location", "Unknown")}
+Weather: {data.get("weather", "Unknown")}
+Irrigation: {data.get("irrigation", "Unknown")}
+Budget: {data.get("budget", "Unknown")}
+Preferred Crop Type: {data.get("preferred_crop", "Unknown")}
+Scheme Eligibility: {data.get("scheme", "Unknown")}
 """
         model = genai.GenerativeModel("models/gemini-flash-lite-latest")
         response = model.generate_content(prompt)
@@ -131,18 +160,15 @@ Return the result in JSON format like this:
         if hasattr(response, "text") and response.text:
             try:
                 crops = json.loads(response.text)["crops"]
-
                 html = "<html><head><style>body{font-family:Arial;padding:20px;}h2{color:#2E7D32;}.card{border:1px solid #ccc;border-radius:8px;padding:15px;margin:10px 0;box-shadow:2px 2px 5px rgba(0,0,0,0.1);}h3{margin:0 0 8px;color:#1565C0;}p{margin:0;color:#333;}</style></head><body><h2>🌾 Recommended Crops</h2>"
                 for crop in crops:
                     html += f"<div class='card'><h3>{crop['name']}</h3><p>{crop['reason']}</p></div>"
                 html += "</body></html>"
-
                 return Response(html, mimetype="text/html")
             except Exception:
                 return Response(response.text, mimetype="text/plain")
         else:
             return Response("⚠️ No text field in Gemini response", mimetype="text/plain")
-
     except Exception as e:
         return f"Internal Server Error: {str(e)}", 500
 
