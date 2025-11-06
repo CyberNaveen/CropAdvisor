@@ -56,7 +56,7 @@ def register():
         return jsonify({"error": "Email already registered"}), 409
 
     user = UserRecord(
-        Name=data["name"],
+        name=data["name"],
         username=data["username"],
         email=data["email"],
         mobileNumber=data["mobileNumber"],
