@@ -4,7 +4,7 @@ import google.generativeai as genai
 import os, json
 from dotenv import load_dotenv
 from models import db, UserRecord
-from auth import hash_password, verify_password, create_jwt
+from auth import hash_password, verify_password, create_jwt, decode_jwt
 
 # Load env
 load_dotenv()
@@ -84,9 +84,24 @@ def login():
     return jsonify({"token": token, "user": {"id": user.id, "name": user.name, "username": user.username}})
 
 # -------------------
+# Protected Route Example
+# -------------------
+@app.route("/profile", methods=["GET"])
+def profile():
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return jsonify({"error": "Missing or invalid Authorization header"}), 401
+
+    token = auth_header.split(" ")[1]
+    decoded = decode_jwt(token)
+    if not decoded:
+        return jsonify({"error": "Invalid or expired token"}), 401
+
+    return jsonify({"message": "Profile access granted", "user": decoded})
+
+# -------------------
 # SQL CRUD Endpoints
 # -------------------
-
 @app.route("/users", methods=["GET"])
 def list_users():
     users = UserRecord.query.all()
@@ -110,7 +125,6 @@ def update_user(user_id):
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    # Update allowed fields
     for field in ["name", "username", "email", "mobileNumber"]:
         if data.get(field):
             setattr(user, field, data[field])
