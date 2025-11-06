@@ -42,7 +42,7 @@ def home():
 @app.route("/register", methods=["POST"])
 def register():
     data = request.get_json() or {}
-    required = ["name", "username", "email", "mobileNumber", "password", "confirmPassword"]
+    required = ["name", "username", "email", "mobileNumber", "password"]
     missing = [k for k in required if not data.get(k)]
     if missing:
         return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
