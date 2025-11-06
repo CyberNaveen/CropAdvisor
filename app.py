@@ -56,7 +56,7 @@ def register():
         return jsonify({"error": "Email already registered"}), 409
 
     user = UserRecord(
-        name=data["name"],
+        Name=data["name"],
         username=data["username"],
         email=data["email"],
         mobileNumber=data["mobileNumber"],
@@ -66,6 +66,7 @@ def register():
     db.session.commit()
 
     return jsonify({"message": "Registration successful"}), 201
+
 
 @app.route("/login", methods=["POST"])
 def login():
