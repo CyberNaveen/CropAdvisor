@@ -6,4 +6,11 @@ services:
     startCommand: gunicorn app:app
     envVars:
       - key: GEMINI_API_KEY
-        value: AIzaSyAFfSAOLxPM-SyV4b5jVRgODaMNDQtypVY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: JWT_ALG
+        value: HS256
+
