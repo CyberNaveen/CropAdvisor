@@ -58,7 +58,7 @@ def register():
         username=data["username"],
         email=data["email"],
         mobileNumber=data["mobileNumber"],
-        password=hash_password(data["password"])
+        password=hash_password(data["password"])  # bcrypt direct
     )
     db.session.add(user)
     db.session.commit()
@@ -79,8 +79,16 @@ def login():
     if not user or not verify_password(password, user.password):
         return jsonify({"error": "Invalid credentials"}), 401
 
-    token = create_jwt(user.id, user.username)
-    return jsonify({"token": token, "user": {"id": user.id, "name": user.name, "username": user.username}})
+    # Use id if present, else fallback to username
+    token = create_jwt(getattr(user, "id", None), user.username)
+    return jsonify({
+        "token": token,
+        "user": {
+            "id": getattr(user, "id", None),
+            "name": user.name,
+            "username": user.username
+        }
+    })
 
 # -------------------
 # Protected Route Example
@@ -105,7 +113,13 @@ def profile():
 def list_users():
     users = UserRecord.query.all()
     return jsonify([
-        {"id": u.id, "name": u.name, "username": u.username, "email": u.email, "mobileNumber": u.mobileNumber}
+        {
+            "id": getattr(u, "id", None),
+            "name": u.name,
+            "username": u.username,
+            "email": u.email,
+            "mobileNumber": u.mobileNumber
+        }
         for u in users
     ])
 
@@ -114,8 +128,13 @@ def get_user(user_id):
     user = UserRecord.query.get(user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
-    return jsonify({"id": user.id, "name": user.name, "username": user.username,
-                    "email": user.email, "mobileNumber": user.mobileNumber})
+    return jsonify({
+        "id": getattr(user, "id", None),
+        "name": user.name,
+        "username": user.username,
+        "email": user.email,
+        "mobileNumber": user.mobileNumber
+    })
 
 @app.route("/users/<int:user_id>", methods=["PUT"])
 def update_user(user_id):
