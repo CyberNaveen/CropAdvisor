@@ -43,13 +43,10 @@ def home():
 def register():
     data = request.get_json() or {}
     print("Incoming data:", data)
-    required = ["name", "username", "email", "mobileNumber", "password","confirmPassword"]
+    required = ["name", "username", "email", "mobileNumber", "password"]
     missing = [k for k in required if not data.get(k)]
     if missing:
         return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
-
-    if data["password"] != data["confirmPassword"]:
-        return jsonify({"error": "Passwords do not match"}), 400
 
     if UserRecord.query.filter_by(username=data["username"]).first():
         return jsonify({"error": "Username already exists"}), 409
