@@ -69,6 +69,7 @@ def register():
 @app.route("/login", methods=["POST"])
 def login():
     data = request.get_json() or {}
+    print("Incoming login data:", data)
     identifier = data.get("username")  # can be username or email
     password = data.get("password")
 
