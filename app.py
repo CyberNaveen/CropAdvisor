@@ -41,6 +41,7 @@ def home():
 # -------------------
 @app.route("/register", methods=["POST"])
 def register():
+    print("Incoming data:", data)
     data = request.get_json() or {}
     required = ["name", "username", "email", "mobileNumber", "password","confirmPassword"]
     missing = [k for k in required if not data.get(k)]
