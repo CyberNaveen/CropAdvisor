@@ -204,7 +204,9 @@ Scheme Eligibility: {data.get("scheme", "Unknown")}
     except Exception as e:
         return f"Internal Server Error: {str(e)}", 500
 
-# Local run
+# Local run / Render run
 if __name__ == "__main__":
-    PORT = int(os.getenv("PORT", 5000))
-    app.run(debug=True, host="0.0.0.0", port=PORT)
+    port = int(os.getenv("PORT", 5000))
+    debug_mode = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+    print(f"🚀 Starting CropAdvisor backend on 0.0.0.0:{port}, debug={debug_mode}")
+    app.run(host="0.0.0.0", port=port, debug=debug_mode)
