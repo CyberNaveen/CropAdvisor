@@ -65,18 +65,16 @@ def register():
 
     return jsonify({"message": "Registration successful"}), 201
 
-
 @app.route("/login", methods=["POST"])
 def login():
     data = request.get_json() or {}
-    print("Incoming login data:", data)
-    identifier = data.get("username")  # can be username or email
+    identifier = data.get("username") or data.get("email")
     password = data.get("password")
 
     if not identifier or not password:
         return jsonify({"error": "Username/email and password required"}), 400
 
-    # Try matching either username or email
+    # Match either username or email
     user = UserRecord.query.filter(
         (UserRecord.username == identifier) | (UserRecord.email == identifier)
     ).first()
