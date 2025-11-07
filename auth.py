@@ -1,7 +1,7 @@
 import os
 import jwt
 import datetime
-import bcrypt 
+import bcrypt
 
 SECRET_KEY = os.getenv("SECRET_KEY", "change_me")
 JWT_ALG = os.getenv("JWT_ALG", "HS256")
@@ -18,7 +18,10 @@ def hash_password(plain: str) -> str:
 def verify_password(plain: str, hashed: str) -> bool:
     """Verify a plain text password against a bcrypt hash."""
     try:
-        return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+        return bcrypt.checkpw(
+            plain.encode("utf-8"),
+            hashed.encode("utf-8")
+        )
     except Exception:
         return False
 
