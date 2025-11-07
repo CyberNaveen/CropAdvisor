@@ -69,24 +69,31 @@ def register():
 @app.route("/login", methods=["POST"])
 def login():
     data = request.get_json() or {}
-    username = data.get("username")
+    identifier = data.get("username")  # can be username or email
     password = data.get("password")
 
-    if not username or not password:
-        return jsonify({"error": "Username and password required"}), 400
+    if not identifier or not password:
+        return jsonify({"error": "Username/email and password required"}), 400
 
-    user = UserRecord.query.filter_by(username=username).first()
-    if not user or not verify_password(password, user.password):
-        return jsonify({"error": "Invalid credentials"}), 401
+    # Try matching either username or email
+    user = UserRecord.query.filter(
+        (UserRecord.username == identifier) | (UserRecord.email == identifier)
+    ).first()
 
-    # Use id if present, else fallback to username
-    token = create_jwt(getattr(user, "id", None), user.username)
+    if not user:
+        return jsonify({"error": "Invalid credentials - user not found"}), 401
+
+    if not verify_password(password, user.password):
+        return jsonify({"error": "Invalid credentials - password mismatch"}), 401
+
+    token = create_jwt(user.id, user.username)
     return jsonify({
         "token": token,
         "user": {
-            "id": getattr(user, "id", None),
+            "id": user.id,
             "name": user.name,
-            "username": user.username
+            "username": user.username,
+            "email": user.email
         }
     })
 
